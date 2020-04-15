@@ -36,9 +36,10 @@ bool ValidationErrorsFatal() {
 static std::vector<std::string> InstanceOrDeviceLayersToEnable(
     const VulkanProcTable& vk,
     VkPhysicalDevice physical_device) {
-  if (!IsDebuggingEnabled()) {
-    return {};
-  }
+  // if (!IsDebuggingEnabled()) {
+  //   return {};
+  // }
+  // return {};
 
   // NOTE: The loader is sensitive to the ordering here. Please do not rearrange
   // this list.
@@ -46,10 +47,7 @@ static std::vector<std::string> InstanceOrDeviceLayersToEnable(
   // Fuchsia uses the updated Vulkan loader and validation layers which no
   // longer includes the image validation layer.
   const std::vector<std::string> candidates = {
-      "VK_LAYER_GOOGLE_threading",      "VK_LAYER_LUNARG_parameter_validation",
-      "VK_LAYER_LUNARG_object_tracker", "VK_LAYER_LUNARG_core_validation",
-      "VK_LAYER_LUNARG_device_limits",  "VK_LAYER_LUNARG_swapchain",
-      "VK_LAYER_GOOGLE_unique_objects"};
+      "VK_LAYER_KHRONOS_validation"};
 #else
   const std::vector<std::string> candidates = {
       "VK_LAYER_GOOGLE_threading",      "VK_LAYER_LUNARG_parameter_validation",

@@ -217,6 +217,7 @@ def BuildTarget(runtime_mode, arch, product, enable_lto):
       arch,
       '--runtime-mode',
       runtime_mode,
+      '--enable-vulkan-validation-layers',
   ]
 
   # Always disable lto until https://github.com/flutter/flutter/issues/44841
