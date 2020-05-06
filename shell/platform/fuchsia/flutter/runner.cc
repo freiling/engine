@@ -5,8 +5,11 @@
 #include "runner.h"
 
 #include <fuchsia/mem/cpp/fidl.h>
+#include <fuchsia/io/cpp/fidl.h>
 #include <lib/async/cpp/task.h>
+#include <lib/fdio/directory.h>
 #include <lib/trace-engine/instrumentation.h>
+#include <lib/vfs/cpp/remote_dir.h>
 #include <zircon/status.h>
 #include <zircon/types.h>
 
@@ -158,6 +161,32 @@ Runner::Runner(async::Loop* loop, sys::ComponentContext* context)
 
   SetupTraceObserver();
 #endif  // !defined(DART_PRODUCT)
+
+  fidl::InterfaceHandle<fuchsia::io::Directory> cache_dir_handle;
+  zx_status_t status = fdio_open(
+    "/cache",
+    fuchsia::io::OPEN_FLAG_DIRECTORY | fuchsia::io::OPEN_RIGHT_READABLE | fuchsia::io::OPEN_RIGHT_WRITABLE,
+    cache_dir_handle.NewRequest().TakeChannel().release());
+  if(status == ZX_OK){
+    fuchsia::io::DirectoryPtr cache_dir;
+    cache_dir.Bind(std::move(cache_dir_handle));
+    cache_dir.events().OnOpen = [](zx_status_t status, ::std::unique_ptr<fuchsia::io::NodeInfo> node){
+      if(status != ZX_OK || !node){
+         FML_LOG(ERROR) << "cache_dir.OnOpen failed: " << status;
+      }
+    };
+
+    auto cache_remote_dir = std::make_unique<vfs::RemoteDir>(std::move(cache_dir));
+    status = context_->outgoing()->debug_dir()->AddEntry("isolated_cache", std::move(cache_remote_dir));
+    if(status != ZX_OK){
+      FML_LOG(ERROR) << "context_->outgoing()->debug_dir()->AddEntry() failed: " << status;
+    }
+
+  }else{
+    FML_LOG(ERROR) << "fdio_open failed: " << status;
+  }
+ 
+
 
   SkGraphics::Init();
 
