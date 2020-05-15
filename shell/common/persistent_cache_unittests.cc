@@ -83,6 +83,11 @@ TEST_F(ShellTest, CacheSkSLWorks) {
   cache = PersistentCache::GetCacheForProcess()->LoadSkSLs();
   ASSERT_GT(cache.size(), 0u);
 
+// Shader precompilation from SKSL is not implemented on the Skia Vulkan
+// backend so don't run the second half of this test on Vulkan. This can get
+// removed if SKSL precompilation is implemented in the Skia Vulkan backend.
+#if !defined(SHELL_ENABLE_VULKAN)
+
   // Run the engine again with cache_sksl = false and check that the previously
   // generated SkSL cache is used for precompile.
   PersistentCache::ResetCacheForProcess();
@@ -124,6 +129,8 @@ TEST_F(ShellTest, CacheSkSLWorks) {
   };
   fml::VisitFiles(dir.fd(), remove_visitor);
   DestroyShell(std::move(shell));
+
+#endif // defined(SHELL_ENABLE_GL)
 }
 
 static void CheckTextSkData(sk_sp<SkData> data, const std::string& expected) {
