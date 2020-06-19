@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "flutter/fml/trace_event.h"
+#include "flutter/shell/common/persistent_cache.h"
 #include "third_party/skia/include/gpu/GrBackendSemaphore.h"
 #include "third_party/skia/include/gpu/GrBackendSurface.h"
 #include "third_party/skia/include/gpu/GrContext.h"
@@ -127,7 +128,15 @@ bool VulkanSurfaceProducer::Initialize(scenic::Session* scenic_session) {
   backend_context.fGetProc = std::move(getProc);
   backend_context.fOwnsInstanceAndDevice = false;
 
-  context_ = GrContext::MakeVulkan(backend_context);
+  GrContextOptions options;
+  if (flutter::PersistentCache::cache_sksl()) {
+    options.fShaderCacheStrategy = GrContextOptions::ShaderCacheStrategy::kSkSL;
+  }
+  flutter::PersistentCache::MarkStrategySet();
+  flutter::PersistentCache::SetCacheDirectoryPath("/cache");
+  options.fPersistentCache = flutter::PersistentCache::GetCacheForProcess();
+
+  context_ = GrContext::MakeVulkan(backend_context, options);
 
   if (context_ == nullptr) {
     FML_LOG(ERROR) << "Failed to create GrContext.";
@@ -157,6 +166,7 @@ void VulkanSurfaceProducer::OnSurfacesPresented(
 
   if (!TransitionSurfacesToExternal(surfaces))
     FML_LOG(ERROR) << "TransitionSurfacesToExternal failed";
+
 
   // Submit surface
   for (auto& surface : surfaces) {
@@ -189,6 +199,7 @@ bool VulkanSurfaceProducer::TransitionSurfacesToExternal(
     const std::vector<
         std::unique_ptr<flutter::SceneUpdateContext::SurfaceProducerSurface>>&
         surfaces) {
+
   for (auto& surface : surfaces) {
     auto vk_surface = static_cast<VulkanSurface*>(surface.get());
 
