@@ -7,15 +7,21 @@
 #include "include/core/SkPicture.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkTypeface.h"
+#include "include/core/SkSerialProcs.h"
+
 
 namespace flutter {
 
 sk_sp<SkData> SerializeTypefaceWithoutData(SkTypeface* typeface, void* ctx) {
-  return typeface->serialize(SkTypeface::SerializeBehavior::kDontIncludeData);
+  return SkData::MakeEmpty();
 }
 
 sk_sp<SkData> SerializeTypefaceWithData(SkTypeface* typeface, void* ctx) {
   return typeface->serialize(SkTypeface::SerializeBehavior::kDoIncludeData);
+}
+
+sk_sp<SkTypeface> DeserializeTypefaceWithoutData(const void* data, size_t length, void* ctx){
+  return SkTypeface::MakeDefault();
 }
 
 struct ImageMetaData {

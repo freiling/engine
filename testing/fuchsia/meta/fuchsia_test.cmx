@@ -18,7 +18,8 @@
       "fuchsia.vulkan.loader.Loader",
       "fuchsia.logger.LogSink",
       "fuchsia.tracing.provider.Registry",
-      "fuchsia.intl.PropertyProvider"
+      "fuchsia.intl.PropertyProvider",
+      "fuchsia.fonts.Provider"
     ]
   }
 }

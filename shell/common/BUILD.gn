@@ -263,5 +263,15 @@ if (enable_unittests) {
       "//flutter/shell/version",
       "//third_party/googletest:gmock",
     ]
+
+    if (is_fuchsia) {
+      if (using_fuchsia_gn_sdk) {
+        deps += [ "$fuchsia_sdk_root/pkg/sys_cpp" ]
+      } else if (using_fuchsia_sdk) {
+        deps += [ "$fuchsia_sdk_root/pkg:sys_cpp" ]
+      } else {
+        deps += [ "//sdk/lib/sys/cpp" ]
+      }
+    }
   }
 }
