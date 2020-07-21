@@ -506,6 +506,7 @@ static sk_sp<SkData> ScreenshotLayerTreeAsPicture(
 #if defined(OS_FUCHSIA)
   SkSerialProcs procs = {0};
   procs.fImageProc = SerializeImageWithoutData;
+  procs.fTypefaceProc = SerializeTypefaceWithoutData;
 #else
   SkSerialProcs procs = {0};
   procs.fTypefaceProc = SerializeTypefaceWithData;
