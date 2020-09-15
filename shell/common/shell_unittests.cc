@@ -11,6 +11,7 @@
 #include <future>
 #include <memory>
 
+#include "assets/directory_asset_bundle.h"
 #include "flutter/flow/layers/layer_tree.h"
 #include "flutter/flow/layers/picture_layer.h"
 #include "flutter/flow/layers/transform_layer.h"
@@ -1879,6 +1880,64 @@ TEST_F(ShellTest, OnServiceProtocolEstimateRasterCacheMemoryWorks) {
   ASSERT_EQ(actual_json, expected_json);
 
   DestroyShell(std::move(shell));
+}
+
+TEST_F(ShellTest, AssetManagerSingle) {
+
+    fml::ScopedTemporaryDirectory asset_dir;
+    fml::UniqueFD asset_dir_fd = fml::OpenDirectory(asset_dir.path().c_str(), false, fml::FilePermission::kRead);
+
+    std::string filename = "test";
+
+    bool success = fml::WriteAtomically(asset_dir_fd, filename.c_str(), fml::DataMapping(filename));
+    ASSERT_TRUE(success);
+
+    AssetManager asset_manager;
+    asset_manager.PushBack(std::make_unique<DirectoryAssetBundle>(std::move(asset_dir_fd)));
+
+    auto mapping = asset_manager.GetAsMapping(filename);
+    ASSERT_TRUE(mapping != nullptr);
+
+    std::string result(reinterpret_cast<const char *>(mapping->GetMapping()), mapping->GetSize());
+
+    ASSERT_TRUE(result == filename);
+
+}
+TEST_F(ShellTest, AssetManagerMulti) {
+
+    fml::ScopedTemporaryDirectory asset_dir;
+    fml::UniqueFD asset_dir_fd = fml::OpenDirectory(asset_dir.path().c_str(), false, fml::FilePermission::kRead);
+
+    std::vector<std::string> filenames = {
+        "good0",
+        "bad0",
+        "good1",
+        "bad1",
+    };
+
+    for(auto filename : filenames){
+        bool success = fml::WriteAtomically(asset_dir_fd, filename.c_str(), fml::DataMapping(filename));
+        ASSERT_TRUE(success);
+    }
+
+    AssetManager asset_manager;
+    asset_manager.PushBack(std::make_unique<DirectoryAssetBundle>(std::move(asset_dir_fd)));
+
+    auto mappings = asset_manager.GetAsMappings("(.*)");
+    ASSERT_TRUE(mappings.size() == 4);
+
+    std::vector<std::string> expected_results = {
+        "good0",
+        "good1",
+    };
+
+    mappings = asset_manager.GetAsMappings("(.*)good(.*)");
+    ASSERT_TRUE(mappings.size() == expected_results.size());
+
+    for(auto &mapping : mappings){
+        std::string result(reinterpret_cast<const char *>(mapping->GetMapping()), mapping->GetSize());
+        ASSERT_NE(std::find(expected_results.begin(), expected_results.end(), result), expected_results.end());
+    }
 }
 
 }  // namespace testing

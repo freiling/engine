@@ -24,6 +24,11 @@ class AssetResolver {
   [[nodiscard]] virtual std::unique_ptr<fml::Mapping> GetAsMapping(
       const std::string& asset_name) const = 0;
 
+  // Same as GetAsMapping() but returns mappings for all files who's name
+  // matches |pattern|. Returns empty vector if no matching assets are found
+  [[nodiscard]] virtual std::vector<std::unique_ptr<fml::Mapping>>
+  GetAsMappings(const std::string& asset_pattern) const = 0;
+
  private:
   FML_DISALLOW_COPY_AND_ASSIGN(AssetResolver);
 };
