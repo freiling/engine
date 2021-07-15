@@ -620,6 +620,10 @@ void Engine::WarmupSkps(
       surface_producer.ProduceOffscreenSurface(size).release();
   if (!skp_warmup_surface) {
     FML_LOG(ERROR) << "Failed to create offscreen warmup surface";
+    // Tell client that zero shaders were warmed up because warmup failed.
+    if (completion_callback) {
+      completion_callback.value()(0);
+    }
     return;
   }
 
